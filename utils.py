@@ -13,9 +13,6 @@ import os
 warnings.filterwarnings('ignore')
 plt.close('all')
 
-matplotlib.rcParams['font.family'] = 'serif'
-matplotlib.rcParams['mathtext.fontset'] = 'cm' 
-matplotlib.rcParams['font.size'] = 14
 
 #%% System
 def mkdir(path):
@@ -443,14 +440,14 @@ def remove_labels(fig):
     axs=fig.axes
 
     for ax in axs:
-        loc=ax.get_subplotspec()
         try:
-            
+            loc=ax.get_subplotspec()
+        
             if loc.is_last_row()==False:
-                ax.set_xticks(ax.get_xticks(),[])
+                ax.set_xticklabels([])
                 ax.set_xlabel('')
             if loc.is_first_col()==False:
-                ax.set_yticks(ax.get_yticks(),[])
+                ax.set_yticklabels([])
                 ax.set_ylabel('')
         except:
             pass
