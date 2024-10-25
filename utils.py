@@ -502,7 +502,7 @@ def add_gap(x,y,F,gap_x,gap_y,ext_x,ext_y):
         F2=hstack(F2,F[:,i1:i2])
         
         if ext_x!=0:
-            x2=np.append(x2,x[i2-1]+ext_x)
+            x2=np.append(x2,x[i1]+ext_x)
             F2=hstack(F2,np.reshape(F[:,i2-1],(-1,1)))
         
         x2=np.append(x2,x[i1]+(x[i2]-x[i1])/2)
@@ -532,10 +532,10 @@ def add_gap(x,y,F,gap_x,gap_y,ext_x,ext_y):
         F3=vstack(F3,F2[i1:i2,:])
         
         if ext_y!=0:
-            y2=np.append(y2,y[i2-1]+ext_y)
+            y2=np.append(y2,y[i1]+ext_y)
             F3=vstack(F3,np.reshape(F2[i2-1,:],(1,-1)))
         
-        y2=np.append(y2,y[i2-1]+diff_y[i2]/2)
+        y2=np.append(y2,y[i1]+(y[i2]-y[i1])/2)
         F3=vstack(F3,np.zeros((1,len(x2)))+np.nan)
         
         if ext_y!=0:
