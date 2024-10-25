@@ -505,7 +505,7 @@ def add_gap(x,y,F,gap_x,gap_y,ext_x,ext_y):
             x2=np.append(x2,x[i2-1]+ext_x)
             F2=hstack(F2,np.reshape(F[:,i2-1],(-1,1)))
         
-        x2=np.append(x2,x[i2-1]+diff_x[i2]/2)
+        x2=np.append(x2,x[i1]+(x[i2]-x[i1])/2)
         F2=hstack(F2,np.zeros((len(y),1))+np.nan)
         
         if ext_x!=0:
