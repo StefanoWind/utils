@@ -179,16 +179,18 @@ def filt_mean(x,perc_lim=[5,95]):
     '''
     Mean with percentile filter
     '''
-    x[x<np.nanpercentile(x,perc_lim[0])]=np.nan
-    x[x>np.nanpercentile(x,perc_lim[1])]=np.nan    
+    x_filt=x.copy()
+    x_filt[x_filt<np.nanpercentile(x_filt,perc_lim[0])]=np.nan
+    x_filt[x_filt>np.nanpercentile(x_filt,perc_lim[1])]=np.nan    
     return np.nanmean(x)
 
 def filt_BS_mean(x,p_value,M_BS=100,min_N=10,perc_lim=[5,95]):
     '''
     Mean with percentile filter and bootstrap
     '''
-    x[x<np.nanpercentile(x,perc_lim[0])]=np.nan
-    x[x>np.nanpercentile(x,perc_lim[1])]=np.nan
+    x_filt=x.copy()
+    x_filt[x_filt<np.nanpercentile(x_filt,perc_lim[0])]=np.nan
+    x_filt[x_filt>np.nanpercentile(x_filt,perc_lim[1])]=np.nan    
     x=x[~np.isnan(x)]
     
     if len(x)>=min_N:
@@ -247,6 +249,11 @@ def mid(x):
     '''
     return (x[1:]+x[:-1])/2
 
+def rev_mid(x):
+    '''
+    Given midpoint, build edges
+    '''
+    return np.concatenate([[x[0]-(x[1]-x[0])/2],(x[:-1]+x[1:])/2,[x[-1]+(x[-1]-x[-2])/2]])
 
 def nancorrcoef(x,y=None):
     '''
