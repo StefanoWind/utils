@@ -184,6 +184,34 @@ def filt_mean(x,perc_lim=[5,95]):
     x_filt[x_filt>np.nanpercentile(x_filt,perc_lim[1])]=np.nan    
     return np.nanmean(x)
 
+def filt_stat(x,func,perc_lim=[5,95]):
+    '''
+    Statistic with percentile filter
+    '''
+    x_filt=x.copy()
+    lb=np.nanpercentile(x_filt,perc_lim[0])
+    ub=np.nanpercentile(x_filt,perc_lim[1])
+    x_filt=x_filt[(x_filt>=lb)*(x_filt<=ub)]
+       
+    return func(x_filt)
+
+def filt_BS_stat(x,func,p_value=5,M_BS=100,min_N=10,perc_lim=[5,95]):
+    '''
+    Statstics with percentile filter and bootstrap
+    '''
+    x_filt=x.copy()
+    lb=np.nanpercentile(x_filt,perc_lim[0])
+    ub=np.nanpercentile(x_filt,perc_lim[1])
+    x_filt=x_filt[(x_filt>=lb)*(x_filt<=ub)]
+    
+    if len(x)>=min_N:
+        x_BS=bootstrap(x_filt,M_BS)
+        stat=func(x_BS,axis=1)
+        BS=np.nanpercentile(stat,p_value)
+    else:
+        BS=np.nan
+    return BS
+
 def filt_BS_mean(x,p_value,M_BS=100,min_N=10,perc_lim=[5,95]):
     '''
     Mean with percentile filter and bootstrap
@@ -339,6 +367,20 @@ def vec_diff(x1,x2):
     b=np.tile(x2,(len(x1),1))
     return np.transpose(a)-b
 
+def sphere2cart(r,ele,azi):
+    Nr=len2(r)
+    Nb=len2(ele)
+    
+    R=np.transpose(np.tile(r,(Nb,1)))
+    A=np.tile(azi,(Nr,1))
+    E=np.tile(ele,(Nr,1))
+    
+    X=R*cosd(E)*cosd(90-A)
+    Y=R*cosd(E)*sind(90-A)
+    Z=R*sind(E)
+    
+    return X,Y,Z
+
 #%% Signal processing
 def lag(x,y,max_lag=10):
     lag=np.arange(-max_lag,max_lag+1)
@@ -357,6 +399,40 @@ def lag(x,y,max_lag=10):
         corr[np.where(lag==l)[0][0]] = nancorrcoef(x_lag, y_lag)[0][1]
     
     return lag, corr
+
+def acf(x,nlags=100,normalize="False"):
+    import pandas as pd
+    x_fill=pd.Series(x).interpolate().values
+    x_fill=x_fill[~np.isnan(x_fill)]
+    x_det=x_fill-np.nanmean(x_fill)
+    
+    n=len(x_det)
+    conv=np.correlate(x_det,x_det,mode='full')
+    N=np.correlate(np.zeros(n)+1, np.zeros(n)+1, mode='full')
+    acf=conv[n-1:n-1+nlags]/N[n-1:n-1+nlags]
+    if normalize==True:
+        acf=acf/np.var(x_fill)
+    return acf
+
+def acf_BS(x,nlags=100,normalize="False",n_BS=100,pvalue=50):
+    import pandas as pd
+    x_fill=pd.Series(x).interpolate().values
+    x_fill=x_fill[~np.isnan(x_fill)]
+    x_det=x_fill-np.nanmean(x_fill)
+    n=len(x_det)
+    
+    x_BS=bootstrap(x, n_BS)
+    acf=[]
+    for i in range(n_BS):
+        conv=np.correlate(x_BS[:,i],x_BS[:,i],mode='full')
+        N=np.correlate(np.zeros(n)+1, np.zeros(n)+1, mode='full')
+        if normalize==True:
+            acf=vstack(acf,conv[n-1:n-1+nlags]/N[n-1:n-1+nlags]/np.var(x_BS[:,i]))
+        else:
+            acf=vstack(acf,conv[n-1:n-1+nlags]/N[n-1:n-1+nlags])
+        
+    return np.nanpercentile(acf, pvalue,axis=1)
+    
 
 #%% Trigonometry
 def cosd(x):
@@ -486,6 +562,20 @@ def draw_turbine(x,y,D,wd):
     ylim=ax.get_ylim()
     tr = transforms.Affine2D().scale(D/700,D/700).translate(-100*D/700,-370*D/700).rotate_deg(90-wd).translate(x,y)
     ax.imshow(img, transform=tr + ax.transData)
+    plt.xlim(xlim)
+    plt.ylim(ylim)
+    
+def draw_turbine_front(x,y,D,az,yaw=0):
+    import matplotlib.image as mpimg
+    from matplotlib import transforms
+    from matplotlib import pyplot as plt
+    
+    img = mpimg.imread('C:/Users/SLETIZIA/OneDrive - NREL/Desktop/Main/utils/Turbine_front.png')
+    ax=plt.gca()
+    xlim=ax.get_xlim()
+    ylim=ax.get_ylim()
+    tr = transforms.Affine2D().translate(-695,-790).scale(1/790/2,1/790/2).scale(D*cosd(yaw),D).translate(0,0).rotate_deg(az)
+    ax.imshow(img, transform=tr + ax.transData, zorder=2)
     plt.xlim(xlim)
     plt.ylim(ylim)
     
